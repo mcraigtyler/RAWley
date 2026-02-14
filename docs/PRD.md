@@ -235,124 +235,91 @@ A modular system for hosting AI agents locally that can learn and play various b
 
 **NFR-6.1** Backend: Node.js with TypeScript
 
-**NFR-6.2** Database: PostgreSQL or SQLite with TypeORM
+**NFR-6.2** Database: PostgreSQL (primary) or SQLite (alternative) with TypeORM
 
 **NFR-6.3** ORM: TypeORM with migrations, Repository pattern using Data Mapper pattern
 
-**NFR-6.4** AI Providers: Anthropic SDK, OpenAI SDK, Ollama client
+**NFR-6.4** Infrastructure: Docker Compose for development services (PostgreSQL, optional Ollama)
 
-**NFR-6.5** Interface: CLI (v1 - current priority), REST API with tsoa (future)
+**NFR-6.5** AI Providers: Anthropic SDK, OpenAI SDK, Ollama client
 
-**NFR-6.6** REST API (future): tsoa for OpenAPI, Express, resource-based architecture
+**NFR-6.6** Interface: CLI (v1 - current priority), REST API with tsoa (future)
 
-**NFR-6.7** Web UI (future): React with Vite, React Query, PrimeReact, CSS Variables
+**NFR-6.7** REST API (future): tsoa for OpenAPI, Express, resource-based architecture
+
+**NFR-6.8** Web UI (future): React with Vite, React Query, PrimeReact, CSS Variables
 
 ---
 
-## 5. Data Model
+## 5. Data Requirements
 
-### 5.1 Core Entities
+### 5.1 Core Data Entities
 
-**Note:** All IDs use UUIDv7 format for time-ordered, sortable identifiers.
+The system SHALL manage the following high-level data entities:
 
-#### Games
-- `id`: UUIDv7 (Primary Key)
-- `name`: String (unique)
-- `rules_text`: Text (natural language)
-- `strategy_guide`: Text
-- `state_schema`: JSONB
-- `created_at`: Timestamp
-- `updated_at`: Timestamp
+**Game Definitions**
+- Store game rules in natural language
+- Store strategy guides
+- Define game state structure
+- Support versioning of game definitions
 
-#### Rules
-- `id`: UUIDv7 (Primary Key)
-- `game_id`: UUIDv7 (Foreign Key)
-- `type`: Enum (setup, turn, action, validation, win_condition)
-- `condition`: Text (DSL expression)
-- `action`: Text (DSL expression)
-- `priority`: Integer
+**Game Sessions**
+- Track active, completed, and abandoned sessions
+- Maintain current game state
+- Record complete move history
+- Support session persistence and resumption
 
-#### RuleSets
-- `id`: UUIDv7 (Primary Key)
-- `game_id`: UUIDv7 (Foreign Key)
-- `compiled_rules`: JSONB
-- `version`: Integer
-- `created_at`: Timestamp
+**Players**
+- Define player types (human, AI, AI with RL)
+- Configure AI provider per player
+- Store player-specific configuration
 
-#### Sessions
-- `id`: UUIDv7 (Primary Key)
-- `game_id`: UUIDv7 (Foreign Key)
-- `current_state`: JSONB
-- `move_history`: JSONB[]
-- `status`: Enum (active, completed, abandoned)
-- `created_at`: Timestamp
-- `updated_at`: Timestamp
-- `completed_at`: Timestamp
+**Game Rules**
+- Store compiled rulesets for efficient evaluation
+- Support multiple rule types (setup, turn, action, validation, win conditions)
+- Version control for rule changes
 
-#### SessionPlayers
-- `id`: UUIDv7 (Primary Key)
-- `session_id`: UUIDv7 (Foreign Key)
-- `player_index`: Integer
-- `player_type`: Enum (human, ai, ai_rl)
-- `ai_provider`: String (nullable)
-- `ai_config`: JSONB (nullable)
+**Moves**
+- Record all moves with timestamps
+- Capture state before and after each move
+- Enable move replay and analysis
 
-#### Moves
-- `id`: UUIDv7 (Primary Key)
-- `session_id`: UUIDv7 (Foreign Key)
-- `player_index`: Integer
-- `move_number`: Integer
-- `action`: JSONB
-- `state_before`: JSONB
-- `state_after`: JSONB
-- `timestamp`: Timestamp
+**Reinforcement Learning Data**
+- Store experiences (state, action, reward, next state)
+- Track learned policies with version history
+- Record performance metrics per policy
+- Define custom reward functions per game
 
-### 5.2 RL Entities
+**Observability Data**
+- Capture AI decision reasoning and alternatives
+- Track performance metrics per game and player
+- Record processing times and confidence scores
 
-#### RLExperiences
-- `id`: UUIDv7 (Primary Key)
-- `session_id`: UUIDv7 (Foreign Key)
-- `game_id`: UUIDv7 (Foreign Key)
-- `state`: JSONB
-- `action`: JSONB
-- `reward`: Float
-- `next_state`: JSONB
-- `is_terminal`: Boolean
-- `timestamp`: Timestamp
+### 5.2 Data Integrity Requirements
 
-#### RLPolicies
-- `id`: UUIDv7 (Primary Key)
-- `game_id`: UUIDv7 (Foreign Key)
-- `version`: Integer
-- `model_weights`: BYTEA or JSON
-- `performance_metrics`: JSONB
-- `games_played`: Integer
-- `win_rate`: Float
-- `created_at`: Timestamp
+**DI-1** All entities SHALL use time-ordered, sortable identifiers (UUIDv7)
 
-#### RewardFunctions
-- `id`: UUIDv7 (Primary Key)
-- `game_id`: UUIDv7 (Foreign Key)
-- `function_definition`: Text
-- `parameters`: JSONB
+**DI-2** Game state changes SHALL be atomic and transactional
 
-### 5.3 Observability Entities
+**DI-3** Move history SHALL be immutable once recorded
 
-#### GameMetrics
-- `id`: UUIDv7 (Primary Key)
-- `session_id`: UUIDv7 (Foreign Key)
-- `player_index`: Integer
-- `metric_name`: String
-- `metric_value`: Float
-- `timestamp`: Timestamp
+**DI-4** Foreign key relationships SHALL be enforced at database level
 
-#### AIDecisions
-- `id`: UUIDv7 (Primary Key)
-- `move_id`: UUIDv7 (Foreign Key)
-- `reasoning`: Text
-- `alternatives_considered`: JSONB
-- `confidence`: Float
-- `processing_time_ms`: Integer
+**DI-5** Game states SHALL be validated against game schema before storage
+
+**DI-6** Concurrent updates to the same session SHALL be properly serialized
+
+### 5.3 Data Privacy Requirements
+
+**DP-1** No personally identifiable information SHALL be stored (local system)
+
+**DP-2** API keys SHALL be stored in environment variables, not database
+
+**DP-3** Game states SHALL not contain sensitive user information
+
+**DP-4** Audit logs MAY be sanitized before external export
+
+**Note:** Detailed database schema and implementation can be found in ARCHITECTURE.md
 
 ---
 
@@ -422,8 +389,22 @@ Your move:
 
 ## 8. Milestones
 
+### Phase 0: Environment & Infrastructure Setup
+- Project scaffolding with TypeScript and Node.js
+- Development tooling setup (ESLint, Prettier, Jest)
+- Docker Compose configuration for services
+  - PostgreSQL database container
+  - Future: Redis cache container (when needed)
+- TypeORM configuration and connection setup
+- Environment variable management (.env setup)
+- Basic project structure (folders, exports, barrel files)
+- CI/CD pipeline foundation (linting, type checking)
+- Initial database migration tooling
+- Development documentation (setup guide, contributing guide)
+
 ### Phase 1: Core Foundation
-- Database schema implementation
+- Database schema implementation with TypeORM entities
+- Database migrations for all core tables
 - Basic rules engine with simple DSL
 - Provider interface and Claude implementation
 - Simple game (Tic-Tac-Toe) as proof of concept

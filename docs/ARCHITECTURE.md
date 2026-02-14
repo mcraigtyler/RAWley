@@ -448,7 +448,41 @@ erDiagram
     }
 ```
 
-### 4.2 Data Flow
+### 4.2 Data Integrity Implementation
+
+The database schema implements the following data integrity requirements from the PRD:
+
+**DI-1: Time-Ordered Identifiers**
+- All primary keys use UUIDv7 format
+- Provides natural time-based sorting
+- Enables efficient range queries on ID fields
+
+**DI-2: Atomic Transactions**
+- All state changes wrapped in database transactions
+- Use TypeORM transaction managers for multi-table operations
+- Rollback on any failure to maintain consistency
+
+**DI-3: Immutable Move History**
+- MOVES table is append-only (no updates or deletes)
+- SESSIONS.move_history array is replaced, never modified in place
+- Historical data preserved for analysis and replay
+
+**DI-4: Foreign Key Enforcement**
+- All foreign key relationships enforced at database level
+- Cascading deletes configured where appropriate
+- Referential integrity guaranteed by PostgreSQL/SQLite
+
+**DI-5: Schema Validation**
+- Game states validated against GAMES.state_schema before storage
+- JSON schema validation at application layer before database write
+- TypeORM decorators provide type-level validation
+
+**DI-6: Concurrency Control**
+- Optimistic locking using version columns where needed
+- Serializable isolation level for session state updates
+- Row-level locking for concurrent move submissions
+
+### 4.3 Data Flow
 
 ```mermaid
 flowchart LR
@@ -460,20 +494,20 @@ flowchart LR
         W6 --> W2
         W7[RL Experience] --> W2
     end
-    
+
     subgraph "Read Path"
         R1[Load Game] --> W2
         R2[Load Session] --> W2
         R3[Get Legal Moves] --> W2
         R4[Load Policy] --> W2
     end
-    
+
     subgraph "Cache Layer - Optional"
         C1[Game Rules Cache]
         C2[Session Cache]
         C3[Policy Cache]
     end
-    
+
     W2 -.cached in.- C1
     W2 -.cached in.- C2
     W2 -.cached in.- C3
@@ -1297,30 +1331,70 @@ ai-board-game-agent/
 
 ### 10.1 Local Development
 
+**Development Stack:**
+- Docker Compose for containerized services
+- PostgreSQL in Docker for development database
+- Node.js application running locally (not containerized for fast iteration)
+- Optional: Ollama in Docker for local AI inference
+
 ```mermaid
 graph TB
     subgraph "Developer Machine"
         Code[Source Code]
-        
-        subgraph "Local Services"
-            App[Node.js App]
-            DB[SQLite DB]
-            Ollama[Ollama Local]
+        App[Node.js App<br/>Running Locally]
+
+        subgraph "Docker Compose Services"
+            DB[PostgreSQL Container]
+            Ollama[Ollama Container<br/>Optional]
+            Redis[Redis Container<br/>Future]
         end
-        
+
         Code --> App
         App --> DB
-        App --> Ollama
+        App -.optional.- Ollama
+        App -.future.- Redis
     end
-    
+
     subgraph "External APIs"
         Claude[Claude API]
         OpenAI[OpenAI API]
     end
-    
+
     App -.optional.- Claude
     App -.optional.- OpenAI
 ```
+
+**Docker Compose Configuration:**
+```yaml
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: rawley
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: super-dev-password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Optional local AI
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  postgres_data:
+  ollama_data:
+```
+
+**Alternative: SQLite for Simpler Setup**
+- Can use SQLite for development without Docker
+- Switch to PostgreSQL for production/advanced features
+- TypeORM supports both with minimal configuration changes
 
 ### 10.2 Production Deployment (Future)
 
