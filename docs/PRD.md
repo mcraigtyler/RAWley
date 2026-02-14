@@ -235,11 +235,17 @@ A modular system for hosting AI agents locally that can learn and play various b
 
 **NFR-6.1** Backend: Node.js with TypeScript
 
-**NFR-6.2** Database: PostgreSQL or SQLite
+**NFR-6.2** Database: PostgreSQL or SQLite with TypeORM
 
-**NFR-6.3** AI Providers: Anthropic SDK, OpenAI SDK, Ollama client
+**NFR-6.3** ORM: TypeORM with migrations, Repository pattern using Data Mapper pattern
 
-**NFR-6.4** Interface: CLI (v1), REST API (future)
+**NFR-6.4** AI Providers: Anthropic SDK, OpenAI SDK, Ollama client
+
+**NFR-6.5** Interface: CLI (v1 - current priority), REST API with tsoa (future)
+
+**NFR-6.6** REST API (future): tsoa for OpenAPI, Express, resource-based architecture
+
+**NFR-6.7** Web UI (future): React with Vite, React Query, PrimeReact, CSS Variables
 
 ---
 
@@ -247,8 +253,10 @@ A modular system for hosting AI agents locally that can learn and play various b
 
 ### 5.1 Core Entities
 
+**Note:** All IDs use UUIDv7 format for time-ordered, sortable identifiers.
+
 #### Games
-- `id`: UUID (Primary Key)
+- `id`: UUIDv7 (Primary Key)
 - `name`: String (unique)
 - `rules_text`: Text (natural language)
 - `strategy_guide`: Text
@@ -257,23 +265,23 @@ A modular system for hosting AI agents locally that can learn and play various b
 - `updated_at`: Timestamp
 
 #### Rules
-- `id`: UUID (Primary Key)
-- `game_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `game_id`: UUIDv7 (Foreign Key)
 - `type`: Enum (setup, turn, action, validation, win_condition)
 - `condition`: Text (DSL expression)
 - `action`: Text (DSL expression)
 - `priority`: Integer
 
 #### RuleSets
-- `id`: UUID (Primary Key)
-- `game_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `game_id`: UUIDv7 (Foreign Key)
 - `compiled_rules`: JSONB
 - `version`: Integer
 - `created_at`: Timestamp
 
 #### Sessions
-- `id`: UUID (Primary Key)
-- `game_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `game_id`: UUIDv7 (Foreign Key)
 - `current_state`: JSONB
 - `move_history`: JSONB[]
 - `status`: Enum (active, completed, abandoned)
@@ -282,16 +290,16 @@ A modular system for hosting AI agents locally that can learn and play various b
 - `completed_at`: Timestamp
 
 #### SessionPlayers
-- `id`: UUID (Primary Key)
-- `session_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `session_id`: UUIDv7 (Foreign Key)
 - `player_index`: Integer
-- `player_type`: Enum (human, ai, ai_rl, remote)
+- `player_type`: Enum (human, ai, ai_rl)
 - `ai_provider`: String (nullable)
 - `ai_config`: JSONB (nullable)
 
 #### Moves
-- `id`: UUID (Primary Key)
-- `session_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `session_id`: UUIDv7 (Foreign Key)
 - `player_index`: Integer
 - `move_number`: Integer
 - `action`: JSONB
@@ -302,9 +310,9 @@ A modular system for hosting AI agents locally that can learn and play various b
 ### 5.2 RL Entities
 
 #### RLExperiences
-- `id`: UUID (Primary Key)
-- `session_id`: UUID (Foreign Key)
-- `game_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `session_id`: UUIDv7 (Foreign Key)
+- `game_id`: UUIDv7 (Foreign Key)
 - `state`: JSONB
 - `action`: JSONB
 - `reward`: Float
@@ -313,8 +321,8 @@ A modular system for hosting AI agents locally that can learn and play various b
 - `timestamp`: Timestamp
 
 #### RLPolicies
-- `id`: UUID (Primary Key)
-- `game_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `game_id`: UUIDv7 (Foreign Key)
 - `version`: Integer
 - `model_weights`: BYTEA or JSON
 - `performance_metrics`: JSONB
@@ -323,24 +331,24 @@ A modular system for hosting AI agents locally that can learn and play various b
 - `created_at`: Timestamp
 
 #### RewardFunctions
-- `id`: UUID (Primary Key)
-- `game_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `game_id`: UUIDv7 (Foreign Key)
 - `function_definition`: Text
 - `parameters`: JSONB
 
 ### 5.3 Observability Entities
 
 #### GameMetrics
-- `id`: UUID (Primary Key)
-- `session_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `session_id`: UUIDv7 (Foreign Key)
 - `player_index`: Integer
 - `metric_name`: String
 - `metric_value`: Float
 - `timestamp`: Timestamp
 
 #### AIDecisions
-- `id`: UUID (Primary Key)
-- `move_id`: UUID (Foreign Key)
+- `id`: UUIDv7 (Primary Key)
+- `move_id`: UUIDv7 (Foreign Key)
 - `reasoning`: Text
 - `alternatives_considered`: JSONB
 - `confidence`: Float
@@ -479,7 +487,6 @@ Your move:
 - Collaborative filtering for strategy recommendations
 - Advanced RL algorithms (PPO, A3C)
 - Semantic memory search with embeddings
-- Real-time multiplayer with WebSockets
 
 ---
 
