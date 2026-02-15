@@ -1,0 +1,112 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+lib/
+out/
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Docker
+docker-compose.override.yml
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# TypeORM
+# Keep migration files, but ignore generated files
+ormconfig.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Package manager locks (uncomment based on preference)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# AI/ML model files (if stored locally)
+*.ckpt
+*.pth
+*.pt
+*.h5
+*.pkl
+*.pickle
+models/
+
+# Generated API documentation
+api-docs/
+swagger-output.json
+
+# Exploration artifacts (keep source, ignore builds)
+exploration/**/node_modules/
+exploration/**/dist/
+exploration/**/build/
+exploration/**/*.log
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*

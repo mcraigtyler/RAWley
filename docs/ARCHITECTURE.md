@@ -25,13 +25,53 @@
 
 ## 1. Overview
 
-### 1.1 Architecture Principles
+### 1.1 Pre-Development Exploration
+
+**Exploration Philosophy:**
+This project includes a Pre-Dev Phase for hands-on exploration of AI and RL technologies. The exploration work is intentionally isolated to allow learning without architectural constraints.
+
+**Exploration Structure:**
+```
+/exploration/
+├── README.md                    # Exploration overview and goals
+├── LEARNINGS.md                 # Key insights and recommendations
+├── ollama/                      # Local AI experiments
+│   ├── setup-notes.md
+│   ├── prompt-tests/
+│   └── model-comparison.ts
+├── rl-basics/                   # RL fundamentals
+│   ├── q-learning-gridworld/
+│   ├── simple-tic-tac-toe/
+│   └── rl-concepts.md
+├── providers/                   # AI provider experiments
+│   ├── claude-prompts/
+│   ├── structured-outputs/
+│   └── comparison.md
+├── hybrid-approaches/           # LLM + RL integration tests
+│   ├── scoring-approach/
+│   ├── suggestion-approach/
+│   └── findings.md
+└── prototypes/                  # Simple game prototypes
+    ├── tictactoe-ai/
+    ├── flip7-rules/
+    └── learnings.md
+```
+
+**Integration Path:**
+- Experiments remain in `/exploration` (not part of production code)
+- Learnings inform architecture decisions
+- Proven patterns can be extracted and refactored into `/src`
+- Prototypes serve as reference implementations
+- Performance data guides technology choices
+
+### 1.2 Architecture Principles
 
 - **Separation of Concerns**: Game logic, AI providers, and rules engine are independent
 - **Data-Driven**: Games defined in database, not code
 - **Provider Agnostic**: Support multiple AI providers through common interface
 - **Extensible**: Easy to add new games, providers, and player types
 - **Testable**: Components can be tested in isolation
+- **Learning-Informed**: Architecture decisions based on Pre-Dev exploration findings
 
 ### 1.2 High-Level Architecture
 

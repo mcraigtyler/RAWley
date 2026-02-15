@@ -389,6 +389,64 @@ Your move:
 
 ## 8. Milestones
 
+### Pre-Dev Phase: AI & RL Exploration
+
+**Goal:** Hands-on learning and experimentation with AI and RL technologies before architectural commitment.
+
+**Structure:** Create `/exploration` folder isolated from main codebase. Experiments can be referenced or refactored into main project later.
+
+**Exploration Areas:**
+
+1. **Local AI with Ollama**
+   - Set up Ollama locally (Docker or native)
+   - Test different models (Llama, Mistral, etc.)
+   - Experiment with prompt engineering for game moves
+   - Compare response quality and speed across models
+   - Document findings: which models work best for reasoning
+
+2. **Cloud AI Providers**
+   - Set up Claude API access (Anthropic)
+   - Test prompt patterns for board game decision making
+   - Experiment with structured outputs for moves
+   - Compare cost vs quality vs speed
+   - Test error handling and retry logic
+
+3. **Basic Reinforcement Learning Concepts**
+   - Build simple RL example (e.g., grid world, tic-tac-toe)
+   - Implement Q-learning from scratch
+   - Understand state, action, reward, policy
+   - Visualize learning progress over episodes
+   - Document RL fundamentals for team reference
+
+4. **Hybrid AI+RL Approach**
+   - Prototype combining LLM reasoning with RL guidance
+   - Test different integration strategies:
+     - LLM generates moves, RL scores them
+     - RL suggests move types, LLM executes
+     - Independent evaluation with weighted combination
+   - Document pros/cons of each approach
+
+5. **Simple Board Game Prototype**
+   - Implement basic tic-tac-toe or simple card game
+   - Test AI making moves via API calls
+   - Experiment with rules validation
+   - Test game state serialization
+   - Identify challenges for complex games
+
+**Deliverables:**
+- `/exploration` folder with documented experiments
+- Learning notes in `/exploration/LEARNINGS.md`
+- Performance comparison spreadsheet (models, costs, speed)
+- Recommendation doc: "Which technologies should we use?"
+- Simple prototypes that can inform architecture decisions
+
+**Exit Criteria:**
+- Comfortable with Ollama setup and usage
+- Understand prompt engineering for game AI
+- Grasp basic RL concepts and when to use them
+- Clear opinion on local vs cloud AI trade-offs
+- Ready to design the real architecture with confidence
+
 ### Phase 0: Environment & Infrastructure Setup
 - Project scaffolding with TypeScript and Node.js
 - Development tooling setup (ESLint, Prettier, Jest)
