@@ -32,10 +32,9 @@ docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
 docker exec -it ollama ollama pull llama3.2
 
 # Test it
-curl http://localhost:11434/api/generate -d '{
-  "model": "llama3.2",
-  "prompt": "You are playing tic-tac-toe. The board is X|O|X in row 1, O|_|_ in row 2, _|_|_ in row 3. What is your best move? Respond with just the position (1-9)."
-}'
+curl http://localhost:11434/api/generate -d '{ "model": "llama3.2", "prompt": "You are playing tic-tac-toe. The board is X|O|X in row 1, O|_|_ in row 2, _|_|_ in row 3. What is your best move? Respond with just the position (1-9)."}'
+
+curl "http://localhost:11434/api/generate" -H "Content-Type: application/json" -d "{\"model\":\"llama3.2\",\"prompt\":\"You are playing tic-tac-toe. The board is X|O|X in row 1, O|_|_ in row 2, _|_|_ in row 3. What is your best move? Respond with just the position (1-9).\"}"
 ```
 
 **Experiments to try:**
