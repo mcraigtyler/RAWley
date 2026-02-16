@@ -7,10 +7,12 @@
     "train": "tsx src/training/train.ts",
     "baseline": "tsx src/experiments/baseline.ts",
     "compare": "tsx src/experiments/compare.ts",
+    "test": "tsx test/run.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "tsx": "^4.19.0"
+    "@types/node": "^25.2.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
   }
 }
