@@ -80,42 +80,85 @@
 
 ## 3. Reinforcement Learning
 
-### Q-Learning Grid World
+### Q-Learning for Tic-Tac-Toe
 
-**Results:**
-- Episodes to converge: [X]
-- Final success rate: [Y]%
-- Learning rate: [Z]
+**Implementation:** See `rl-games/` for full code.
 
-**Insights:**
-- [What you learned about RL fundamentals]
+**How the Q-table works:**
+- The Q-table maps **board states** (not game histories) to move values
+- Key format: 9-character string like `"XO__X__O_"` — one char per cell
+- Each entry stores an array of 9 Q-values (one per board position)
+- Occupied positions get `-Infinity` so they're never selected
+- Two games reaching the same board via different move orders share the same Q-table entry
+- The agent does NOT store transitions between states — only per-state move valuations
+- This is "model-free" RL: no game tree, just learned (state, action) values
 
-### Tic-Tac-Toe RL
+**The Q-learning update rule:**
+```
+Q(s, a) = Q(s, a) + α * [reward + γ * max Q(s', a') - Q(s, a)]
+```
+- Applied backward through each player's move history after a game ends
+- Terminal reward (win/loss/draw) is assigned to the last move; earlier moves get reward=0
+- The discount factor (γ=0.9) propagates value backward through the `nextState` chain
+- With learning rate α=0.1 and discount γ=0.9, reward signal reaching the opening move after one game is ~0.000006 (0.1^4 * 0.9^4) — essentially invisible from a single game
 
-**Implementation:**
-- State space size: [X] states
-- Training episodes: [Y]
-- Training time: [Z] minutes
+**Key insight — exploration vs exploitation:**
+- With epsilon=0 (no exploration), the agent locks onto the first move that gets any non-zero Q-value
+- After one game, the opening move gets a tiny positive value (~0.000006), making it strictly better than 0
+- From that point, the agent always picks that same opening move and never tries alternatives
+- **Epsilon must be > 0** for the agent to discover better strategies through exploration
+- Epsilon-greedy: with probability ε pick a random move, otherwise pick the best Q-value move
+- Epsilon decays over time so the agent gradually shifts from exploring to exploiting what it learned
 
-**Performance:**
-- Win rate vs random: [X]%
-- Win rate vs always-center: [Y]%
-- Discovered strategies: [list what it learned]
+**Key insight — tied Q-values:**
+- When all Q-values are equal (untrained state), always picking the first valid move causes repetitive play
+- Solution: randomize among moves that share the best Q-value
+- This only helps until values diverge (after first game), then epsilon-greedy takes over
 
-**Challenges:**
-- [What was hard to implement?]
-- [What surprised you?]
+**Hyperparameters (defaults):**
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| Learning rate (α) | 0.1 | How fast Q-values update |
+| Discount factor (γ) | 0.9 | How much future rewards matter |
+| Epsilon (ε) | 1.0 (training), 0.5 (untrained play), 0.05 (trained play) | Exploration rate |
+| Epsilon decay | 0.9995 (training), 0.995 (play) | Multiplied per episode/game |
+| Epsilon min | 0.01–0.05 | Never fully stop exploring |
+
+**Rewards:**
+| Outcome | Value | Reasoning |
+|---------|-------|-----------|
+| Win | +1.0 | Primary goal |
+| Loss | -1.0 | Strong negative signal |
+| Draw | +0.3 | Slightly positive — prefer draw over loss |
+
+**Performance (from unit test — 1000 training episodes):**
+- Win rate vs random after 1000 self-play episodes: >60%
+- Q-table size after 1000 episodes: several hundred states
+- Full training run (50k episodes, Task 6) expected to reach >90% vs random
+
+**Challenges discovered:**
+1. **JSON serialization of -Infinity:** `JSON.stringify(-Infinity)` produces `null`. Must restore `-Infinity` on load.
+2. **Reward propagation is slow:** With α=0.1 and γ=0.9, opening moves barely feel the terminal reward after one game. Q-learning requires thousands of games to learn opening strategy — not suitable for "learn while you play" with a handful of games.
+3. **Exploration is critical:** Without epsilon > 0, the agent gets stuck on whatever worked first and never discovers better moves. This was the single biggest issue during initial testing.
+4. **State space is manageable for tic-tac-toe:** ~5,478 reachable states. This fits comfortably in memory and a 1-3 MB JSON file. Won't scale to complex games without approximation (neural networks, etc.).
 
 ### Applicability to Complex Games
 
 **Pros:**
-- [When RL makes sense]
+- Pure math, no external dependencies
+- Deterministic once trained (with epsilon=0)
+- Fast inference — just a hash table lookup
+- Learns optimal play through self-play, no human expertise needed
 
 **Cons:**
-- [When RL is too complex or slow]
+- State space explodes for complex games (chess: ~10^44 states)
+- Tabular Q-learning only works for small state spaces
+- Requires many thousands of training episodes
+- No generalization — each board state is independent, doesn't "understand" patterns
+- For games beyond tic-tac-toe complexity, would need Deep Q-Networks (DQN) or policy gradient methods
 
 **Recommendation:**
-[Should we use RL? For which types of games?]
+Tabular Q-learning is excellent for learning about RL fundamentals and works well for simple games (tic-tac-toe, Connect Four). For the RAWley project's goal of supporting arbitrary board games, a hybrid approach (RL + LLM) or function approximation (neural networks) will be needed for anything beyond trivial state spaces.
 
 ---
 
@@ -167,33 +210,26 @@
 
 ### Tic-Tac-Toe Prototype
 
-**Time to build:** [X] hours
+**Code:** `rl-games/src/games/tic-tac-toe/`
+
+**Key design decisions that worked well:**
+1. **Board as flat array (0-8)** — simpler than 2D, easy to serialize, natural for Q-table keys
+2. **State key as string** (`"XO__X__O_"`) — compact, hashable, order-independent (two paths to same board = same key)
+3. **Agent interface with `async chooseMove(game): Promise<number>`** — works for sync agents (Random, Q-Learning) and async agents (LLM) with a single interface
+4. **Game-per-folder structure** (`src/games/tic-tac-toe/`) — keeps game engine and play script together, scales to multiple games
 
 **Key challenges:**
-1. [Challenge and how you solved it]
-2. [Challenge and how you solved it]
-
-**AI Move Quality:**
-- Invalid moves: [X]%
-- Optimal moves: [Y]%
-- Recovery from errors: [strategy that worked]
-
-### Rules Validation
-
-**Approaches tried:**
-- [e.g., "Hard-coded validation functions"]
-- [e.g., "AI-based rule checking"]
-
-**Recommendation:**
-[What should we use in the real project?]
+1. **Windows + ESM + test runner:** Node's built-in test runner doesn't auto-discover `.ts` files. Had to build a custom `test/run.ts` that uses `readdirSync` + `node:test`'s `run()` API.
+2. **Agent-agnostic game loop:** The play script needed to handle Human, Random, and Q-Learning agents transparently. The `Agent` interface made this clean, but Q-Learning needed extra lifecycle hooks (learning updates after each game, save on exit) that don't fit the basic interface.
 
 ### State Serialization
 
 **What worked:**
-- [e.g., "JSON with typed schemas"]
+- 9-character string keys for Q-table (`"XO__X__O_"`) — fast, deterministic, order-independent
+- Q-table as JSON (`Map` → `Object.fromEntries` → `JSON.stringify`) — simple, portable
 
-**What didn't:**
-- [e.g., "Free-form text descriptions caused parsing issues"]
+**Gotcha:**
+- `JSON.stringify(-Infinity)` produces `null`. Must handle on deserialization. Any special numeric values (Infinity, NaN) will have this problem with JSON.
 
 ---
 
