@@ -2,10 +2,12 @@ import { createInterface } from 'node:readline';
 import { setTimeout } from 'node:timers/promises';
 import { TicTacToe, type Player } from './TicTacToe.js';
 import { RandomAgent } from '../../agents/RandomAgent.js';
+import { Stats } from '../../utils/stats.js';
 import type { Agent } from '../../agents/types.js';
 
 const game = new TicTacToe();
 const rl = createInterface({ input: process.stdin, output: process.stdout });
+const stats = new Stats();
 
 function ask(question: string): Promise<string> {
   return new Promise(resolve => rl.question(question, resolve));
@@ -58,30 +60,36 @@ async function chooseAgent(player: Player): Promise<Agent> {
   }
 }
 
-async function gameLoop(agentX: Agent, agentO: Agent): Promise<void> {
+function hasHuman(agentX: Agent, agentO: Agent): boolean {
+  return agentX instanceof HumanAgent || agentO instanceof HumanAgent;
+}
+
+async function playOneGame(agentX: Agent, agentO: Agent, silent: boolean): Promise<void> {
   const agentFor: Record<Player, Agent> = { X: agentX, O: agentO };
+  game.reset();
 
   while (game.winner === null) {
-    printBoard();
+    if (!silent) printBoard();
     const agent = agentFor[game.currentPlayer];
     const move = await agent.chooseMove(game);
-    console.log(`  ${agent.name} (${game.currentPlayer}) plays ${move}`);
+    if (!silent) console.log(`  ${agent.name} (${game.currentPlayer}) plays ${move}`);
     game.makeMove(move);
 
-    // Brief pause when agents play so you can follow along
-    if (!(agent instanceof HumanAgent)) {
+    if (!silent && !(agent instanceof HumanAgent)) {
       await setTimeout(300);
     }
   }
 
-  printBoard();
-
-  if (game.winner === 'draw') {
-    console.log("  It's a draw!");
-  } else {
-    const winner = agentFor[game.winner];
-    console.log(`  ${game.winner} (${winner.name}) wins!`);
+  if (!silent) {
+    printBoard();
+    if (game.winner === 'draw') {
+      console.log("  It's a draw!");
+    } else {
+      console.log(`  ${game.winner} (${agentFor[game.winner].name}) wins!`);
+    }
   }
+
+  stats.record({ winner: game.winner, moves: game.moveHistory.length });
 }
 
 async function main(): Promise<void> {
@@ -92,23 +100,53 @@ async function main(): Promise<void> {
   console.log('  Choose who plays each side:');
   console.log();
 
-  let playing = true;
-  while (playing) {
-    const agentX = await chooseAgent('X');
-    const agentO = await chooseAgent('O');
+  const agentX = await chooseAgent('X');
+  const agentO = await chooseAgent('O');
+  const label = `${agentX.name} (X) vs ${agentO.name} (O)`;
+
+  // If no humans are playing, offer batch mode
+  if (!hasHuman(agentX, agentO)) {
+    const countAnswer = (await ask('  Number of games to play (default 1): ')).trim();
+    const count = parseInt(countAnswer, 10) || 1;
+
+    let verbose = true;
+    if (count > 1) {
+      const verboseAnswer = (await ask('  Show each game result? (y/n, default y): ')).trim().toLowerCase();
+      verbose = verboseAnswer !== 'n';
+    }
 
     console.log();
-    console.log(`  ${agentX.name} (X) vs ${agentO.name} (O)`);
-
-    game.reset();
-    await gameLoop(agentX, agentO);
-
+    console.log(`  ${label} — ${count} game${count > 1 ? 's' : ''}`);
     console.log();
-    const again = (await ask('  Play again? (y/n): ')).trim().toLowerCase();
-    playing = again === 'y';
-    console.log();
+
+    for (let i = 0; i < count; i++) {
+      await playOneGame(agentX, agentO, count > 1);
+
+      if (verbose) {
+        const b = game.board.map(c => c ?? '_');
+        const board = `${b[0]}${b[1]}${b[2]}|${b[3]}${b[4]}${b[5]}|${b[6]}${b[7]}${b[8]}`;
+        const result = game.winner === 'draw' ? 'Draw  ' : `${game.winner} wins`;
+        const num = String(i + 1).padStart(String(count).length);
+        console.log(`  #${num}  ${board}  ${result}  (${game.moveHistory.length} moves)`);
+      }
+    }
+  } else {
+    // Interactive mode with replay
+    let playing = true;
+    while (playing) {
+      console.log();
+      console.log(`  ${label}`);
+      await playOneGame(agentX, agentO, false);
+
+      console.log();
+      const again = (await ask('  Play again? (y/n): ')).trim().toLowerCase();
+      playing = again === 'y';
+    }
   }
 
+  console.log();
+  console.log(stats.summary(label));
+  console.log();
   console.log('  Thanks for playing!');
   rl.close();
 }
