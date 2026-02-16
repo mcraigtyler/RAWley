@@ -1,4 +1,4 @@
-import type { TicTacToe } from '../games/TicTacToe.js';
+import type { TicTacToe } from '../games/tic-tac-toe/TicTacToe.js';
 
 export interface Agent {
   /** Choose a move given the current game state */

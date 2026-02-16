@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "play:ttt": "tsx src/games/tic-tac-toe/play.ts",
     "train": "tsx src/training/train.ts",
     "baseline": "tsx src/experiments/baseline.ts",
     "compare": "tsx src/experiments/compare.ts",

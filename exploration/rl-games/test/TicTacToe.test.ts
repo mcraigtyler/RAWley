@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { TicTacToe } from '../src/games/TicTacToe.js';
+import { TicTacToe } from '../src/games/tic-tac-toe/TicTacToe.js';
 
 describe('TicTacToe', () => {
   let game: TicTacToe;
