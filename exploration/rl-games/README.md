@@ -13,11 +13,23 @@ npm install
 
 ## Play Tic-Tac-Toe
 
-Play a two-player game in your terminal:
-
 ```bash
 npm run play:ttt
 ```
+
+You'll be prompted to choose who controls each side:
+
+```
+  Choose who plays each side:
+
+  Player X — 1) Human, 2) Random: 1
+  Player O — 1) Human, 2) Random: 2
+```
+
+Options:
+- **Human vs Human** — two players at the same keyboard
+- **Human vs Random** — play against a random agent
+- **Random vs Random** — watch two agents play (300ms delay between moves)
 
 The board shows available positions as numbers and taken positions as X/O:
 
@@ -30,8 +42,6 @@ The board shows available positions as numbers and taken positions as X/O:
     ---------           ---------
     6 | 7 | 8           6 | 7 | 8
 ```
-
-Enter a number to place your mark. X goes first.
 
 ## Commands
 
