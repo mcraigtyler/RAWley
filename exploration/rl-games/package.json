@@ -1,0 +1,16 @@
+{
+  "name": "rl-games",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "train": "tsx src/training/train.ts",
+    "baseline": "tsx src/experiments/baseline.ts",
+    "compare": "tsx src/experiments/compare.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  }
+}
