@@ -107,6 +107,65 @@ agent.load('q-tables/ttt-50k.json');
 
 Q-table files are JSON objects mapping state keys (e.g. `"XO__X__O_"`) to arrays of 9 Q-values.
 
+## Training
+
+Train the Q-learning agent via self-play:
+
+```bash
+npm run train
+```
+
+Default output:
+```
+  Q-Learning Training
+  ===================
+  Episodes: 50,000
+  Log every: 5,000 episodes
+  Eval games: 500 (vs Random, alternating sides)
+  Output: q-tables/ttt-50k.json
+
+  Episode  5000 | vs Random: W:72% L: 8% D:20% | Q-table: 4200 states | ε: 0.0821
+  Episode 10000 | vs Random: W:85% L: 3% D:12% | Q-table: 5100 states | ε: 0.0100
+  ...
+  Episode 50000 | vs Random: W:93% L: 1% D: 6% | Q-table: 5478 states | ε: 0.0100
+
+  Training complete in 12.3s
+  Q-table: 5478 states saved to q-tables/ttt-50k.json
+```
+
+### CLI Options
+
+Override defaults with flags:
+
+```bash
+npm run train -- --episodes 100000 --output q-tables/ttt-100k.json
+npm run train -- --log-interval 10000 --eval-games 1000
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--episodes` | 50000 | Number of self-play training episodes |
+| `--log-interval` | 5000 | Evaluate and log progress every N episodes |
+| `--eval-games` | 500 | Games vs Random per evaluation checkpoint |
+| `--output` | `q-tables/ttt-50k.json` | Where to save the trained Q-table |
+
+### What Happens During Training
+
+1. The agent plays itself (epsilon-greedy) for each episode
+2. After each game, Q-learning updates are applied backward through both players' move histories
+3. Epsilon decays after each episode (starts at 1.0, decays to 0.01)
+4. At each log interval, the agent is evaluated vs Random (greedy, no exploration) on both sides
+5. The final Q-table is saved to the output path
+
+### Using a Trained Q-Table
+
+After training, use the Q-table in interactive play:
+
+```bash
+npm run play:ttt
+# Select Q-Learning for a player, then enter: q-tables/ttt-50k.json
+```
+
 ## Commands
 
 | Command | Description |
