@@ -166,6 +166,35 @@ npm run play:ttt
 # Select Q-Learning for a player, then enter: q-tables/ttt-50k.json
 ```
 
+## Baseline Experiments
+
+Run baseline matchups to establish expected win rates:
+
+```bash
+npm run baseline
+```
+
+Output:
+```
+  Baseline Experiments
+  ====================
+  Games per matchup: 200
+
+  === Random (X) vs Random (O) — 200 games ===
+    X wins:  112 (56.0%)
+    O wins:   58 (29.0%)
+    Draws:    30 (15.0%)
+    Avg game length: 7.2 moves
+```
+
+Override game count:
+
+```bash
+npm run baseline -- --games 1000
+```
+
+LLM matchups will be added after the LLM agent is implemented.
+
 ## Commands
 
 | Command | Description |

@@ -141,6 +141,12 @@ Q(s, a) = Q(s, a) + α * [reward + γ * max Q(s', a') - Q(s, a)]
 2. **Reward propagation is slow:** With α=0.1 and γ=0.9, opening moves barely feel the terminal reward after one game. Q-learning requires thousands of games to learn opening strategy — not suitable for "learn while you play" with a handful of games.
 3. **Exploration is critical:** Without epsilon > 0, the agent gets stuck on whatever worked first and never discovers better moves. This was the single biggest issue during initial testing.
 4. **State space is manageable for tic-tac-toe:** ~5,478 reachable states. This fits comfortably in memory and a 1-3 MB JSON file. Won't scale to complex games without approximation (neural networks, etc.).
+5. **Self-play produces brittle agents:** Agents trained via self-play are highly optimized against their *own* play patterns but can be vulnerable to opponents that play differently. Observed when pitting a 50k-episode agent against a 100k-episode agent:
+   - 50k (X) vs 100k (O): X wins 100% — the 50k agent's different opening moves push the 100k agent into board states its self-play never prioritized defending
+   - 100k (X) vs 50k (O): 100% draws — the stronger agent plays near-optimally as X, and the 50k agent knows enough O defense to force draws
+   - Both agents use epsilon=0 (greedy), so each matchup is fully deterministic — the same single game repeats every time
+   - **Root cause:** The Q-table only has well-calibrated values for states the agent actually visited during training. A differently-trained opponent explores different move sequences, leading into states with poor or missing Q-values.
+   - **Implication for RAWley:** To build robust RL agents, training against diverse opponents (opponent pools, adding noise, or periodically resetting opponents) would be necessary. Pure self-play creates specialists, not generalists.
 
 ### Applicability to Complex Games
 

@@ -29,34 +29,22 @@ class HumanAgent implements Agent {
   }
 }
 
-interface QLearningSetup {
-  agent: QLearningAgent;
-  savePath: string;
-}
-
-const qlSetups: QLearningSetup[] = [];
-
 async function createQLearningAgent(): Promise<QLearningAgent> {
   const path = (await ask('  Q-table file path (e.g. q-tables/ttt-50k.json): ')).trim();
 
-  // Start with exploration. A loaded table with many states has already been
-  // trained, so use a low epsilon. An empty/small table needs high exploration.
-  let agent: QLearningAgent;
+  const agent = new QLearningAgent({ epsilon: 0 });
   if (path && existsSync(path)) {
-    agent = new QLearningAgent({ epsilon: 0.05, epsilonDecay: 0.998, epsilonMin: 0.01 });
     agent.load(path);
-    console.log(`  Loaded Q-table with ${agent.tableSize} states (ε=${agent.config.epsilon}).`);
+    console.log(`  Loaded Q-table with ${agent.tableSize} states.`);
   } else {
-    agent = new QLearningAgent({ epsilon: 0.5, epsilonDecay: 0.995, epsilonMin: 0.05 });
     if (path) {
-      console.log(`  File not found — starting with empty Q-table (will save to ${path}).`);
+      console.log(`  File not found — starting with empty Q-table.`);
     } else {
-      console.log('  No file given — using untrained Q-Learning agent (will not save).');
+      console.log('  No file given — using untrained Q-Learning agent.');
     }
-    console.log(`  Exploration rate ε=${agent.config.epsilon} (decays each game).`);
+    console.log('  Tip: Train first with "npm run train" to generate a Q-table.');
   }
 
-  qlSetups.push({ agent, savePath: path });
   return agent;
 }
 
@@ -100,15 +88,10 @@ async function playOneGame(agentX: Agent, agentO: Agent, silent: boolean): Promi
   const agentFor: Record<Player, Agent> = { X: agentX, O: agentO };
   game.reset();
 
-  // Track (state, action, player) for Q-learning updates
-  const history: { player: Player; state: string; action: number }[] = [];
-
   while (game.winner === null) {
     if (!silent) printBoard();
     const agent = agentFor[game.currentPlayer];
-    const state = game.getStateKey();
     const move = await agent.chooseMove(game);
-    history.push({ player: game.currentPlayer, state, action: move });
     if (!silent) console.log(`  ${agent.name} (${game.currentPlayer}) plays ${move}`);
     game.makeMove(move);
 
@@ -124,31 +107,6 @@ async function playOneGame(agentX: Agent, agentO: Agent, silent: boolean): Promi
     } else {
       console.log(`  ${game.winner} (${agentFor[game.winner].name}) wins!`);
     }
-  }
-
-  // Apply Q-learning updates for any QLearningAgent that played
-  for (const { agent } of qlSetups) {
-    if (agent !== agentX && agent !== agentO) continue;
-    const playerSide = agent === agentX ? 'X' : 'O';
-
-    for (let i = history.length - 1; i >= 0; i--) {
-      const { player, state, action } = history[i];
-      if (player !== playerSide) continue;
-
-      const nextEntry = history.slice(i + 1).find(h => h.player === player);
-      const nextState = nextEntry ? nextEntry.state : null;
-
-      let reward = 0;
-      if (i >= history.length - 2) {
-        if (game.winner === 'draw') reward = agent.rewards.draw;
-        else if (game.winner === player) reward = agent.rewards.win;
-        else reward = agent.rewards.loss;
-      }
-
-      agent.update(state, action, reward, nextState);
-    }
-
-    agent.decayEpsilon();
   }
 
   stats.record({ winner: game.winner, moves: game.moveHistory.length });
@@ -208,14 +166,6 @@ async function main(): Promise<void> {
 
   console.log();
   console.log(stats.summary(label));
-
-  // Save any Q-tables that have a file path
-  for (const { agent, savePath } of qlSetups) {
-    if (!savePath) continue;
-    agent.save(savePath);
-    console.log(`  Saved Q-table (${agent.tableSize} states) to ${savePath}`);
-  }
-
   console.log();
   console.log('  Thanks for playing!');
   rl.close();
